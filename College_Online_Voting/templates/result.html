@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Results — CIVITAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="navbar-brand">
+            <div class="brand-icon"></div>CIVITAS
+        </a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('vote') }}">Vote</a></li>
+            <li><a href="{{ url_for('result') }}" class="active">Results</a></li>
+            <li><span class="nav-voter-badge">{{ session.voter_code }}</span></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container" style="padding:2rem 1.5rem;">
+        <div class="page-header">
+            <h1 class="page-title">Election <span>Results</span></h1>
+            <p class="page-subtitle">
+                {{ election.title if election else 'General Election' }} ·
+                <strong style="color:var(--gold);">{{ total_votes }}</strong> total votes cast
+            </p>
+        </div>
+
+        {% if not has_voted %}
+        <div class="alert alert-warning">
+            Results are partially visible. <a href="{{ url_for('vote') }}">Cast your vote</a> to view the complete
+            breakdown.
+        </div>
+        {% endif %}
+
+        <div style="display:grid; grid-template-columns: 1fr 380px; gap:2rem; align-items:start;">
+
+            <!-- Results List -->
+            <div>
+                {% if results[0] is defined %}
+                <div
+                    style="background:rgba(201,168,76,0.07); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem;">
+                    <div style="font-size:1.5rem;">🏆</div>
+                    <div>
+                        <div
+                            style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold); margin-bottom:0.25rem;">
+                            Current Leader</div>
+                        <div style="font-family:var(--font-display); font-size:1.25rem; color:var(--white);">{{
+                            results[0].name }}</div>
+                        <div class="text-sm text-muted">{{ results[0].party or 'Independent' }} · {{
+                            results[0].vote_count }} votes ({{ results[0].percentage }}%)</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Vote Tally</h3>
+                        <span class="badge badge-gold">Live</span>
+                    </div>
+                    <div class="card-body">
+                        {% for r in results %}
+                        <div class="result-item fade-up" style="animation-delay: {{ loop.index0 * 0.08 }}s;">
+                            <div class="result-header">
+                                <div style="display:flex; align-items:center; gap:0.75rem;">
+                                    <div
+                                        style="width:32px; height:32px; background:rgba(201,168,76,0.1); border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.875rem; font-weight:700; color:var(--gold-pale);">
+                                        {{ loop.index }}
+                                    </div>
+                                    <div>
+                                        <div class="result-name">{{ r.name }}</div>
+                                        <div class="text-xs text-muted">{{ r.party or 'Independent' }} · {{ r.position
+                                            }}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div class="result-votes mono">{{ r.vote_count }} votes</div>
+                                    <div class="text-xs text-gold">{{ r.percentage }}%</div>
+                                </div>
+                            </div>
+                            <div class="result-bar-track">
+                                <div class="result-bar-fill {% if loop.first %}leader{% endif %}" style="width: 0%"
+                                    data-width="{{ r.percentage }}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center" style="padding:2rem;">No votes have been cast yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div>
+                <div class="card" style="margin-bottom:1rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">Distribution</h3>
+                    </div>
+                    <div class="card-body" style="padding:1rem;">
+                        <canvas id="resultChart" height="260"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="stat-value" style="font-size:2rem;">{{ total_votes }}</div>
+                        <div class="stat-label">Total Votes Cast</div>
+                        <div class="divider"></div>
+                        <p class="text-sm text-muted">Results update in real-time as ballots are counted.</p>
+                        {% if has_voted %}
+                        <div
+                            style="margin-top:0.75rem; display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:#6ee7b7;">
+                            <span>✓</span> Your vote has been recorded
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/result_chart.js') }}"></script>
+    <script>
+        // Animate result bars
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.result-bar-fill').forEach(bar => {
+                    bar.style.width = bar.dataset.width;
+                });
+            }, 300);
+        });
+
+        // Chart data from Flask
+        const chartData = {
+            labels: [{% for r in results %}'{{ r.name }}'{% if not loop.last %}, {% endif %} {% endfor %}],
+        votes: [{% for r in results %}{{ r.vote_count }}{% if not loop.last %}, {% endif %} {% endfor %}]
+  };
+    </script>
+</body>
+
+</html>

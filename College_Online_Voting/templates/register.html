@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — College Voting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="navbar-brand">
+            <div class="brand-icon"></div>College Voting
+        </a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="{{ url_for('login') }}">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div style="min-height: calc(100vh - 64px); display:flex; align-items:center; justify-content:center; padding: 3rem 1.5rem;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.05) 0%, transparent 60%);">
+        <div style="width: 100%; max-width: 560px;">
+
+            <div class="auth-logo">
+                <div class="logo-icon"></div>
+                <h2>Create Your Account</h2>
+                <p>Register to participate in the election</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}">{{ msg|safe }}</div>
+            {% endfor %}{% endif %}
+            {% endwith %}
+
+            <div class="card">
+                <div class="card-body">
+                    <form id="registerForm" action="{{ url_for('register') }}" method="POST">
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" name="full_name" class="form-control"
+                                    value="{{ form_data.get('full_name', '') }}" placeholder="John Smith" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">College Register Number *</label>
+                                <input type="text" name="register_number" class="form-control"
+                                    value="{{ form_data.get('register_number', '') }}" placeholder="e.g. 21CS001" required>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Department *</label>
+                                <input type="text" name="department" class="form-control"
+                                    value="{{ form_data.get('department', '') }}" placeholder="e.g. BSc CS / IT" required>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Password *</label>
+                                <input type="password" name="password" id="password" class="form-control"
+                                    placeholder="Min. 8 characters" required minlength="8">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm Password *</label>
+                                <input type="password" name="confirm_password" id="confirm_password"
+                                    class="form-control" placeholder="Repeat password" required>
+                            </div>
+                        </div>
+                        <div id="password-match-msg"
+                            style="font-size:0.8rem; margin-top:-0.75rem; margin-bottom:1rem; display:none;"></div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" name="phone" class="form-control"
+                                    value="{{ form_data.get('phone', '') }}" placeholder="+1 555 000 0000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" name="date_of_birth" class="form-control"
+                                    value="{{ form_data.get('date_of_birth', '') }}">
+                            </div>
+                        </div>
+
+
+
+                        <div
+                            style="background:rgba(201,168,76,0.07); border:1px solid var(--border); border-radius:var(--radius); padding:0.875rem 1rem; margin-bottom:1.25rem; font-size:0.8rem; color:var(--gray-300);">
+                            ⚠️ A unique <strong style="color:var(--gold);">Voter ID</strong> will be generated for you
+                            upon registration. Please save it — you'll need it to verify your vote.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block btn-lg">Register to Vote</button>
+                    </form>
+
+                    <div class="divider"></div>
+                    <p class="text-center text-sm text-muted">Already registered? <a href="{{ url_for('login') }}">Student Sign
+                            in here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+</body>
+
+</html>

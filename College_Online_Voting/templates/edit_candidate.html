@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Candidate — College Voting Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h3>✦ College Voting</h3>
+                <p>Admin Panel</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('manage_candidates') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">👤</span> Candidates
+                </a>
+                <a href="{{ url_for('add_candidate') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">➕</span> Add Candidate
+                </a>
+                <div style="margin:1rem 0; height:1px; background:var(--border);"></div>
+                <a href="{{ url_for('index') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">🌐</span> Public Site
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="sidebar-nav-item" style="color:var(--danger);">
+                    <span class="nav-icon">🚪</span> Sign Out
+                </a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}">{{ msg|safe }}</div>
+            {% endfor %}{% endif %}
+            {% endwith %}
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <div>
+                    <h1 style="font-family:var(--font-display); font-size:1.75rem;">Edit Candidate</h1>
+                    <p class="text-muted text-sm">Update candidate details</p>
+                </div>
+                <a href="{{ url_for('manage_candidates') }}" class="btn btn-outline">← Back to List</a>
+            </div>
+
+            <div class="card" style="max-width:680px;">
+                <div class="card-body">
+                    <form action="{{ url_for('edit_candidate', candidate_id=candidate.id) }}" method="POST" enctype="multipart/form-data">
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" name="name" class="form-control" placeholder="Candidate Name"
+                                    value="{{ candidate.name }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Course / Department</label>
+                                <input type="text" name="party" class="form-control" placeholder="e.g. BSc CS / IT"
+                                    value="{{ candidate.party or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Position / Role *</label>
+                            <input type="text" name="position" class="form-control"
+                                placeholder="e.g. President, General Secretary" value="{{ candidate.position }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Biography</label>
+                            <textarea name="bio" class="form-control" rows="3"
+                                placeholder="Brief biography of the candidate…">{{ candidate.bio or '' }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Manifesto / Key Points</label>
+                            <textarea name="manifesto" class="form-control" rows="4"
+                                placeholder="Candidate's goals and key points…">{{ candidate.manifesto or '' }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Candidate Photo</label>
+                            {% if candidate.photo %}
+                            <div style="margin-bottom: 1rem;">
+                                <p class="text-xs text-muted">Current Photo:</p>
+                                <img src="{{ url_for('static', filename='uploads/candidates/' + candidate.photo) }}" alt="Current Photo"
+                                    style="width:100px; height:100px; object-fit:cover; border-radius:50%; border:2px solid var(--border);">
+                            </div>
+                            {% endif %}
+                            <input type="file" name="photo" class="form-control" accept="image/*" id="photoInput"
+                                onchange="previewPhoto(event)">
+                            <p class="text-xs text-muted mt-1">Leave empty to keep current photo. PNG, JPG, WEBP — max 5MB</p>
+                            <div id="photoPreview" style="display:none; margin-top:1rem;">
+                                <p class="text-xs text-muted">New Photo Preview:</p>
+                                <img id="previewImg" src="" alt="Preview"
+                                    style="width:100px; height:100px; object-fit:cover; border-radius:50%; border:2px solid var(--border);">
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+                        <div style="display:flex; gap:1rem;">
+                            <button type="submit" class="btn btn-primary">Update Candidate</button>
+                            <a href="{{ url_for('manage_candidates') }}" class="btn btn-outline">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function previewPhoto(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    document.getElementById('previewImg').src = ev.target.result;
+                    document.getElementById('photoPreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+
+</html>

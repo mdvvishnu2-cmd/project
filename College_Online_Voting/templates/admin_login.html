@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — CIVITAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body style="background: var(--navy-mid);">
+    <div class="auth-wrapper">
+        <div class="auth-card fade-up">
+            <div class="auth-logo">
+                <div class="logo-icon" style="background: var(--danger);"></div>
+                <h2>Admin Portal</h2>
+                <p>Authorized personnel only</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}">{{ msg|safe }}</div>
+            {% endfor %}{% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('admin_login') }}" method="POST">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="admin" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                    <div style="text-align: right; margin-top: 5px;">
+                        <a href="{{ url_for('admin_forgot_password') }}" class="text-xs text-muted" style="color:var(--gray-500);">Forgot Password?</a>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-danger btn-block" style="margin-top:0.5rem;">
+                    Access Admin Panel
+                </button>
+            </form>
+
+            <div class="divider"></div>
+            <p class="text-center text-xs text-muted">
+                <a href="{{ url_for('index') }}" style="color:var(--gray-500);">← Back to public site</a>
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

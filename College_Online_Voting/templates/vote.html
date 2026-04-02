@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cast Your Vote — CIVITAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="navbar-brand">
+            <div class="brand-icon"></div>CIVITAS
+        </a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('vote') }}" class="active">Vote</a></li>
+            <li><a href="{{ url_for('result') }}">Results</a></li>
+            <li><span class="nav-voter-badge">{{ session.voter_code }}</span></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container" style="padding:2rem 1.5rem;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg|safe }}</div>
+        {% endfor %}{% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1 class="page-title">Cast Your <span>Vote</span></h1>
+            {% if election %}
+            <p class="page-subtitle">{{ election.title }} · Select one candidate and confirm your ballot.</p>
+            {% endif %}
+        </div>
+
+        <div
+            style="background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.2); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:2rem; font-size:0.85rem; color:#fca5a5;">
+            ⚠️ <strong>This action is irreversible.</strong> Once submitted, your vote cannot be changed. Choose
+            carefully.
+        </div>
+
+        <form id="voteForm" action="{{ url_for('vote') }}" method="POST">
+            <input type="hidden" name="candidate_id" id="selectedCandidate" required>
+
+            <div class="candidate-grid" style="margin-bottom:2rem;">
+                {% for candidate in candidates %}
+                <div class="candidate-card" data-id="{{ candidate.id }}"
+                    onclick="selectCandidate('{{ candidate.id }}', '{{ candidate.name }}')">
+                    <div class="candidate-photo">
+                        {% if candidate.photo %}
+                        <img src="{{ url_for('static', filename='uploads/candidates/' + candidate.photo) }}"
+                            alt="{{ candidate.name }}">
+                        {% else %}
+                        <div
+                            style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--navy-light);font-size:3.5rem;color:var(--gray-500);">
+                            {{ candidate.name[0] }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="candidate-info">
+                        <div class="candidate-name">{{ candidate.name }}</div>
+                        <div class="candidate-party">{{ candidate.party or 'Independent' }}</div>
+                        <div class="candidate-position">{{ candidate.position }}</div>
+                        {% if candidate.bio %}
+                        <p style="margin-top:0.5rem; font-size:0.78rem; color:var(--gray-300); line-height:1.5;">
+                            {{ candidate.bio[:100] }}{% if candidate.bio|length > 100 %}…{% endif %}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--gray-500);">
+                    No candidates available at this time.
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Confirmation modal area -->
+            <div id="voteConfirm"
+                style="display:none; background:var(--navy-mid); border:1px solid var(--gold); border-radius:var(--radius); padding:1.5rem; margin-bottom:2rem; animation: fadeUp 0.3s ease;">
+                <h3 style="font-family:var(--font-display); color:var(--gold-pale); margin-bottom:0.75rem;">Confirm Your
+                    Selection</h3>
+                <p style="color:var(--gray-300); margin-bottom:1rem;">
+                    You are about to cast your vote for: <strong id="candidateNameDisplay"
+                        style="color:var(--white);"></strong>
+                </p>
+                <p class="text-sm text-muted">This action cannot be undone. Your vote will be securely encrypted and
+                    recorded.</p>
+                <div style="margin-top:1.25rem; display:flex; gap:1rem;">
+                    <button type="submit" class="btn btn-primary">✓ Confirm & Submit Ballot</button>
+                    <button type="button" class="btn btn-outline" onclick="clearSelection()">← Change Selection</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/voting.js') }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Voting — Secure Online Voting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="navbar-brand">
+            <div class="brand-icon"></div>
+            College Voting
+        </a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            {% if session.voter_id %}
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('vote') }}">Vote</a></li>
+            <li><span class="nav-voter-badge">{{ session.voter_code }}</span></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            {% else %}
+            <li><a href="{{ url_for('login') }}">Voter Login</a></li>
+            <li><a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Register</a></li>
+            <li><a href="{{ url_for('admin_login') }}" class="btn btn-outline btn-sm" style="margin-left:0.5rem; border-color:var(--gold); color:var(--gold);">Admin</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container" style="padding-top:1rem;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message|safe }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-decoration">✦</div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-label fade-up">Secure · Transparent · Democratic</div>
+                <h1 class="hero-title fade-up-2">
+                    Your Voice
+                    <em>Shapes History</em>
+                </h1>
+                <p class="hero-text fade-up-3">
+                    Cast your vote securely from anywhere. College Voting ensures every ballot is encrypted, verified, and
+                    counted with full transparency and integrity.
+                </p>
+                {% if election %}
+                <div class="fade-up-3 text-left" style="background:rgba(255,255,255,0.03); border:1px solid rgba(201,168,76,0.2); border-left:3px solid var(--gold); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:1.5rem;font-size:0.9rem; margin-left:auto; margin-right:auto; max-width:600px;">
+                    <div style="color:var(--gold-pale); font-weight:600; margin-bottom:0.5rem;">{{ election.title }}</div>
+                    <div>🗳️ <strong>Voting Period:</strong> <span class="text-white">{{ election.start_date.strftime('%b %d, %Y %I:%M %p') }}</span> &mdash; <span class="text-white">{{ election.end_date.strftime('%b %d, %Y %I:%M %p') }}</span></div>
+                    <div style="margin-top:0.25rem;">📊 <strong>Results Release:</strong> <span class="text-white">{{ election.release_date.strftime('%b %d, %Y %I:%M %p') }}</span></div>
+                </div>
+                {% endif %}
+                <div class="hero-actions fade-up-3">
+                    {% if session.voter_id %}
+                    <a href="{{ url_for('vote') }}" class="btn btn-primary btn-lg">Cast Your Vote</a>
+                    {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Register to Vote</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">Sign In</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS BAR -->
+    <section
+        style="background: var(--navy-mid); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 2rem 0;">
+        <div class="container">
+            <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="stat-card">
+                    <div class="stat-value">{{ voter_count | default(0) }}</div>
+                    <div class="stat-label">Registered Voters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ candidate_count | default(0) }}</div>
+                    <div class="stat-label">Candidates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ vote_count | default(0) }}</div>
+                    <div class="stat-label">Votes Cast</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section">
+        <div class="container">
+            <div style="text-align:center; margin-bottom:2.5rem;">
+                <h2 style="font-size:2rem; color:var(--gold-pale);">Why College Voting?</h2>
+                <p class="text-muted mt-2">Built on principles of security, accessibility, and democratic integrity.</p>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1.5rem;">
+                {% for feature in [
+                ('🔒', 'Bank-Grade Security', 'End-to-end encryption protects every vote cast on the platform.'),
+                ('🗳️', 'Verified Voters', 'Multi-step voter verification prevents fraud and duplicate voting.'),
+                ('📊', 'Real-Time Results', 'Live tallying with transparent, auditable vote counts.'),
+                ('📱', 'Vote Anywhere', 'Accessible from any device — desktop, tablet, or mobile.')
+                ] %}
+                <div class="card">
+                    <div class="card-body" style="text-align:center; padding:2rem 1.5rem;">
+                        <div style="font-size:2rem; margin-bottom:1rem;">{{ feature[0] }}</div>
+                        <h4 style="color:var(--gold-pale); margin-bottom:0.5rem; font-size:1rem;">{{ feature[1] }}</h4>
+                        <p class="text-muted text-sm">{{ feature[2] }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer style="border-top: 1px solid var(--border); padding: 2rem 0; margin-top: 3rem;">
+        <div class="container"
+            style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <span class="navbar-brand" style="font-size:1.1rem;">✦ College Voting</span>
+                <p class="text-muted text-xs mt-1">Secure Online Voting System</p>
+            </div>
+            <div class="text-muted text-xs">
+                &copy; 2025 College Voting. All rights reserved. &nbsp;|&nbsp;
+                <a href="{{ url_for('admin_login') }}" style="color:var(--gray-500);">Admin</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+</body>
+
+</html>

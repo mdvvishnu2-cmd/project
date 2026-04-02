@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — CIVITAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="navbar-brand">
+            <div class="brand-icon"></div>CIVITAS
+        </a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('dashboard') }}" class="active">Dashboard</a></li>
+            <li><a href="{{ url_for('vote') }}">Vote</a></li>
+            <li><a href="{{ url_for('result') }}">Results</a></li>
+            <li><span class="nav-voter-badge">{{ session.voter_code }}</span></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container" style="padding:2rem 1.5rem;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg|safe }}</div>
+        {% endfor %}{% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1 class="page-title">Welcome, <span>{{ voter.full_name.split()[0] }}</span></h1>
+            <p class="page-subtitle">Your voter portal — manage your participation in the election.</p>
+        </div>
+
+        {% if election %}
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.5rem; margin-bottom:1.5rem; font-size:0.85rem; color:var(--gray-300); display:flex; flex-wrap:wrap; gap:1rem; justify-content:space-between; align-items:center;">
+            <div><strong style="color:var(--gold-pale);">{{ election.title }} Schedule:</strong></div>
+            <div style="display:flex; gap:1.5rem;">
+                <div>Open: <strong class="text-white">{{ election.start_date.strftime('%b %d, %Y %I:%M %p') }}</strong></div>
+                <div>Close: <strong class="text-white">{{ election.end_date.strftime('%b %d, %Y %I:%M %p') }}</strong></div>
+                <div>Results: <strong class="text-white">{{ election.release_date.strftime('%b %d, %Y %I:%M %p') }}</strong></div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Status Banner -->
+        {% if voter.has_voted %}
+        <div
+            style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:2rem; display:flex; align-items:center; gap:1rem;">
+            <div style="font-size:1.5rem;">✅</div>
+            <div>
+                <div style="font-weight:600; color:#6ee7b7;">Vote Recorded Successfully</div>
+                <div class="text-sm text-muted">Your ballot has been securely counted. View the live results below.
+                </div>
+            </div>
+            <a href="{{ url_for('result') }}" class="btn btn-success btn-sm" style="margin-left:auto;">View Results</a>
+        </div>
+        {% else %}
+        <div
+            style="background:rgba(201,168,76,0.07); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:2rem; display:flex; align-items:center; gap:1rem;">
+            <div style="font-size:1.5rem;">🗳️</div>
+            <div>
+                <div style="font-weight:600; color:var(--gold);">You haven't voted yet</div>
+                <div class="text-sm text-muted">The election is open. Cast your vote before the deadline.</div>
+            </div>
+            <a href="{{ url_for('vote') }}" class="btn btn-primary btn-sm" style="margin-left:auto;">Cast Vote →</a>
+        </div>
+        {% endif %}
+
+        <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1.5rem; align-items:start;">
+
+            <!-- Voter Profile Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Voter Profile</h3>
+                    <span class="badge badge-success">Verified</span>
+                </div>
+                <div class="card-body">
+                    <div style="text-align:center; margin-bottom:1.5rem;">
+                        <div
+                            style="width:72px; height:72px; background:rgba(201,168,76,0.15); border:2px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.75rem; margin:0 auto 1rem;">
+                            {{ voter.full_name[0].upper() }}
+                        </div>
+                        <div style="font-family:var(--font-display); font-size:1.1rem;">{{ voter.full_name }}</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div style="space-y: 0.75rem;">
+                        {% for label, value in [
+                        ('Voter ID', voter.voter_id),
+                        ('Phone', voter.phone or '—'),
+                        ('Address', voter.address or '—'),
+                        ('Registered', voter.registered_at.strftime('%b %d, %Y') if voter.registered_at else '—')
+                        ] %}
+                        <div
+                            style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                            <span class="text-xs text-muted" style="text-transform:uppercase; letter-spacing:0.05em;">{{
+                                label }}</span>
+                            <span class="text-sm mono"
+                                style="color:var(--gold-pale); text-align:right; max-width:60%;">{{ value }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Candidates Preview -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Candidates
+                        {% if election %}— {{ election.title }}{% endif %}
+                    </h3>
+                    {% if not voter.has_voted %}
+                    <a href="{{ url_for('vote') }}" class="btn btn-primary btn-sm">Vote Now</a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:1rem;">
+                        {% for c in candidates %}
+                        <div
+                            style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-align:center;">
+                            <div
+                                style="width:52px; height:52px; background:rgba(201,168,76,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin:0 auto 0.75rem;">
+                                {% if c.photo %}
+                                <img src="{{ url_for('static', filename='uploads/candidates/' + c.photo) }}"
+                                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">
+                                {% else %}
+                                {{ c.name[0] }}
+                                {% endif %}
+                            </div>
+                            <div style="font-weight:600; font-size:0.9rem;">{{ c.name }}</div>
+                            <div class="text-xs text-gold mt-1">{{ c.party or 'Independent' }}</div>
+                            <div class="text-xs text-muted">{{ c.position }}</div>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-sm" style="grid-column:1/-1;">No candidates available yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+</body>
+
+</html>

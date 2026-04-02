@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Candidates — CIVITAS Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h3>✦ CIVITAS</h3>
+                <p>Admin Panel</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('manage_candidates') }}" class="sidebar-nav-item active">
+                    <span class="nav-icon">👤</span> Candidates
+                </a>
+                <a href="{{ url_for('add_candidate') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">➕</span> Add Candidate
+                </a>
+                <div style="margin:1rem 0; height:1px; background:var(--border);"></div>
+                <a href="{{ url_for('index') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">🌐</span> Public Site
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="sidebar-nav-item" style="color:var(--danger);">
+                    <span class="nav-icon">🚪</span> Sign Out
+                </a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}">{{ msg|safe }}</div>
+            {% endfor %}{% endif %}
+            {% endwith %}
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <div>
+                    <h1 style="font-family:var(--font-display); font-size:1.75rem;">Manage Candidates</h1>
+                    <p class="text-muted text-sm">View, edit, and manage election candidates</p>
+                </div>
+                <a href="{{ url_for('add_candidate') }}" class="btn btn-primary">+ Add Candidate</a>
+            </div>
+
+            <div class="card">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Position</th>
+                                <th>Votes</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in candidates %}
+                            <tr>
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:0.75rem;">
+                                        <div style="width:36px; height:36px; background:rgba(201,168,76,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                                            {% if c.photo %}
+                                            <img src="{{ url_for('static', filename='uploads/candidates/' + c.photo) }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                                            {% else %}
+                                            <span style="font-size:0.9rem; font-weight:600; color:var(--gold);">{{ c.name[0] }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight:500;">{{ c.name }}</div>
+                                            <div class="text-xs text-muted">{{ c.party or 'Independent' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ c.position }}</td>
+                                <td class="mono font-bold">{{ c.vote_count }}</td>
+                                <td>
+                                    {% if c.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                    <span class="badge badge-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div style="display:flex; gap:0.5rem;">
+                                        <a href="{{ url_for('edit_candidate', candidate_id=c.id) }}" class="btn btn-outline btn-sm" style="color:var(--primary); border-color:var(--primary);">Edit</a>
+                                        <a href="{{ url_for('toggle_candidate', candidate_id=c.id) }}" class="btn btn-outline btn-sm">Toggle</a>
+                                        <form action="{{ url_for('delete_candidate', candidate_id=c.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this candidate?');" style="display:inline;">
+                                            <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger); border-color:var(--danger);">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding:2rem;" class="text-muted">No candidates found. <a href="{{ url_for('add_candidate') }}">Add one</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

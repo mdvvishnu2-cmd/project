@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — CIVITAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h3>✦ CIVITAS</h3>
+                <p>Admin Panel</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="sidebar-nav-item active">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('admin_election') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">⚙️</span> Election Settings
+                </a>
+                <a href="{{ url_for('manage_candidates') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">👤</span> Candidates
+                </a>
+                <a href="{{ url_for('add_candidate') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">➕</span> Add Candidate
+                </a>
+                <div style="margin:1rem 0; height:1px; background:var(--border);"></div>
+                <a href="{{ url_for('index') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">🌐</span> Public Site
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="sidebar-nav-item" style="color:var(--danger);">
+                    <span class="nav-icon">🚪</span> Sign Out
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="admin-main">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}">{{ msg|safe }}</div>
+            {% endfor %}{% endif %}
+            {% endwith %}
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <div>
+                    <h1 style="font-family:var(--font-display); font-size:1.75rem;">Admin Dashboard</h1>
+                    <p class="text-muted text-sm">Welcome back, {{ session.admin_name }}</p>
+                </div>
+                <span class="badge badge-gold mono" style="font-size:0.7rem;">{{ now().strftime('%b %d, %Y') if now is
+                    defined else '' }}</span>
+            </div>
+
+            <!-- Stats -->
+            <div class="stat-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stat-card">
+                    <div class="stat-value">{{ voter_count }}</div>
+                    <div class="stat-label">Total Voters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ voted_count }}</div>
+                    <div class="stat-label">Votes Cast</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ turnout }}%</div>
+                    <div class="stat-label">Turnout</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ candidate_count }}</div>
+                    <div class="stat-label">Candidates</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+
+                <!-- Vote chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Vote Distribution</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="adminChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Candidate standings -->
+                <div class="card">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 class="card-title">Live Standings</h3>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            {% if election and election.is_result_released %}
+                                <span class="badge badge-success text-xs">Results Published</span>
+                            {% else %}
+                                <form action="{{ url_for('publish_results') }}" method="POST" style="margin:0;">
+                                    <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Are you sure you want to publish the results now? This will make them visible to all students immediately.');">
+                                        Publish Results
+                                    </button>
+                                </form>
+                            {% endif %}
+                            <a href="{{ url_for('manage_candidates') }}" class="btn btn-outline btn-sm">Manage</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% for c in candidate_results %}
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                            <div>
+                                <div style="font-weight:500; font-size:0.9rem;">{{ c.name }}</div>
+                                <div class="text-xs text-muted">{{ c.party or 'Independent' }}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="mono text-gold" style="font-size:1rem; font-weight:700;">{{ c.vote_count }}
+                                </div>
+                                <div class="text-xs text-muted">votes</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-sm">No candidates yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Registered Students & Audit Log -->
+            <div style="display:grid; grid-template-columns: 1fr; gap:1.5rem;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">All Registered Students</h3>
+                    </div>
+                    <div class="table-wrapper" style="max-height:400px; overflow-y:auto;">
+                        <table style="width:100%; min-width:800px; text-align:left;">
+                            <thead>
+                                <tr>
+                                    <th>Reg. Time</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Reg. No</th>
+                                    <th>Password (Hash)</th>
+                                    <th>Voted For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in all_voters %}
+                                <tr>
+                                    <td class="text-xs text-muted mono">{{ v.registered_at.strftime('%Y-%m-%d %H:%M') if v.registered_at else '—' }}</td>
+                                    <td>
+                                        <div style="font-weight:500;">{{ v.full_name }}</div>
+                                    </td>
+                                    <td class="text-sm">{{ v.department }}</td>
+                                    <td class="mono text-xs">{{ v.register_number }}</td>
+                                    <td class="mono text-xs text-muted" title="{{ v.password_hash }}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ v.password_hash[:20] + '...' if v.password_hash else '—' }}</td>
+                                    <td>
+                                        {% if v.has_voted and v.voted_for %}
+                                        <span class="text-sm text-gold" style="font-weight:600;">{{ v.voted_for }}</span>
+                                        {% elif v.has_voted %}
+                                        <span class="badge badge-success">✓ Yes</span>
+                                        {% else %}
+                                        <span class="badge badge-danger">✗ No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-muted text-sm"
+                                        style="text-align:center; padding:1.5rem;">No registered students yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Audit Log</h3>
+                    </div>
+                    <div style="max-height:320px; overflow-y:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>By</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td><span class="badge badge-gold mono" style="font-size:0.65rem;">{{ log.action
+                                            }}</span></td>
+                                    <td class="text-sm">{{ log.performed_by or '—' }}</td>
+                                    <td class="text-xs text-muted mono">{{ log.created_at.strftime('%m/%d %H:%M') if
+                                        log.created_at else '—' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-muted text-sm"
+                                        style="text-align:center; padding:1.5rem;">No logs.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const labels = [{% for c in candidate_results %}'{{ c.name }}'{% if not loop.last %}, {% endif %} {% endfor %}];
+        const votes = [{% for c in candidate_results %}{{ c.vote_count }}{% if not loop.last %}, {% endif %} {% endfor %}];
+
+        new Chart(document.getElementById('adminChart'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Votes',
+                    data: votes,
+                    backgroundColor: 'rgba(201,168,76,0.35)',
+                    borderColor: 'rgba(201,168,76,0.9)',
+                    borderWidth: 1.5,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    y: { ticks: { color: '#9ca3af', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

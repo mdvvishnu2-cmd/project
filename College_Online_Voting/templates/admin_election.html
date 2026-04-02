@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Settings — CIVITAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h3>✦ CIVITAS</h3>
+                <p>Admin Panel</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('admin_election') }}" class="sidebar-nav-item active">
+                    <span class="nav-icon">⚙️</span> Election Settings
+                </a>
+                <a href="{{ url_for('manage_candidates') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">👤</span> Candidates
+                </a>
+                <a href="{{ url_for('add_candidate') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">➕</span> Add Candidate
+                </a>
+                <div style="margin:1rem 0; height:1px; background:var(--border);"></div>
+                <a href="{{ url_for('index') }}" class="sidebar-nav-item">
+                    <span class="nav-icon">🌐</span> Public Site
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="sidebar-nav-item" style="color:var(--danger);">
+                    <span class="nav-icon">🚪</span> Sign Out
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="admin-main">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}">{{ msg|safe }}</div>
+            {% endfor %}{% endif %}
+            {% endwith %}
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <div>
+                    <h1 style="font-family:var(--font-display); font-size:1.75rem;">Election Settings</h1>
+                    <p class="text-muted text-sm">Configure the current active election timelines.</p>
+                </div>
+            </div>
+
+            <div class="card" style="max-width: 800px;">
+                <div class="card-header">
+                    <h3 class="card-title">Manage Dates and Details</h3>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('admin_election') }}" method="POST">
+                        <div style="margin-bottom: 1rem;">
+                            <label class="form-label" for="title">Election Title</label>
+                            <input type="text" id="title" name="title" class="form-control" value="{{ election.title if election else '' }}" required>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label class="form-label" for="description">Description</label>
+                            <textarea id="description" name="description" class="form-control" rows="3">{{ election.description if election else '' }}</textarea>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <label class="form-label" for="start_date">Start Date & Time</label>
+                                <input type="datetime-local" id="start_date" name="start_date" class="form-control" value="{{ election.start_date.strftime('%Y-%m-%dT%H:%M') if election and election.start_date else '' }}" required>
+                                <p class="text-xs text-muted mt-1">When voting opens.</p>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label" for="end_date">End Date & Time</label>
+                                <input type="datetime-local" id="end_date" name="end_date" class="form-control" value="{{ election.end_date.strftime('%Y-%m-%dT%H:%M') if election and election.end_date else '' }}" required>
+                                <p class="text-xs text-muted mt-1">When voting closes.</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 2rem;">
+                            <label class="form-label" for="release_date">Results Release Date</label>
+                            <input type="datetime-local" id="release_date" name="release_date" class="form-control" value="{{ election.release_date.strftime('%Y-%m-%dT%H:%M') if election and election.release_date else '' }}" required>
+                            <p class="text-xs text-muted mt-1">When the results page becomes accessible to the public.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>
